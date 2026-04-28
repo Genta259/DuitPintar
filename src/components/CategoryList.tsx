@@ -91,7 +91,7 @@ export default function CategoryList({ user }: CategoryListProps) {
   return (
     <div className="space-y-10">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-black text-white tracking-tight uppercase">Manajemen Kategori</h1>
+        <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">Manajemen Kategori</h1>
         <button
           onClick={() => setIsAdding(true)}
           className="btn-primary"
@@ -111,7 +111,7 @@ export default function CategoryList({ user }: CategoryListProps) {
           >
             <form onSubmit={handleAddCategory} className="grid grid-cols-1 md:grid-cols-4 gap-8">
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Nama Label</label>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Nama Label</label>
                 <input
                   required
                   type="text"
@@ -122,7 +122,7 @@ export default function CategoryList({ user }: CategoryListProps) {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Tipe Aliran</label>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Tipe Aliran</label>
                 <select
                   value={newCat.type}
                   onChange={e => setNewCat({ ...newCat, type: e.target.value as TransactionType })}
@@ -133,14 +133,14 @@ export default function CategoryList({ user }: CategoryListProps) {
                 </select>
               </div>
               <div className="flex flex-col gap-2 md:col-span-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Pilih Simbol & Warna</label>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Pilih Simbol & Warna</label>
                 <div className="grid grid-cols-4 md:grid-cols-8 gap-2">
                   {AVAILABLE_ICONS.map((item) => (
                     <button
                       key={item.name}
                       type="button"
                       onClick={() => setNewCat({ ...newCat, icon: item.name })}
-                      className={`p-3 rounded-xl border transition-all flex items-center justify-center ${newCat.icon === item.name ? 'bg-white text-black border-white' : 'border-[#262626] text-gray-500 hover:bg-white/5'}`}
+                      className={`p-3 rounded-xl border transition-all flex items-center justify-center ${newCat.icon === item.name ? 'bg-brand text-bg-main border-brand' : 'border-border-subtle text-text-muted hover:bg-brand/5'}`}
                     >
                       <item.icon className="w-5 h-5" />
                     </button>
@@ -152,13 +152,13 @@ export default function CategoryList({ user }: CategoryListProps) {
                       onChange={e => setNewCat({ ...newCat, color: e.target.value })}
                       className="absolute inset-0 opacity-0 cursor-pointer"
                     />
-                    <div className="w-full h-full border border-[#262626] rounded-xl" style={{ backgroundColor: newCat.color }} />
+                    <div className="w-full h-full border border-border-subtle rounded-xl" style={{ backgroundColor: newCat.color }} />
                   </div>
                 </div>
               </div>
               <div className="flex items-end gap-3 md:col-span-4 justify-end">
                 <button type="submit" className="btn-primary w-full md:w-auto">Simpan Kategori</button>
-                <button type="button" onClick={() => setIsAdding(false)} className="px-5 py-3 text-gray-500 hover:text-white font-bold transition-all">Batal</button>
+                <button type="button" onClick={() => setIsAdding(false)} className="px-5 py-3 text-text-muted hover:text-text-main font-bold transition-all">Batal</button>
               </div>
             </form>
           </motion.div>
@@ -167,26 +167,26 @@ export default function CategoryList({ user }: CategoryListProps) {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         <div className="space-y-6">
-          <h2 className="text-xl font-black flex items-center gap-3 text-white">
-            <ArrowDownCircle className="w-5 h-5 text-gray-500" />
+          <h2 className="text-xl font-black flex items-center gap-3 text-text-main">
+            <ArrowDownCircle className="w-5 h-5 text-text-muted" />
             Pengeluaran
           </h2>
           <div className="grid gap-4">
             {categories.filter(c => c.type === TransactionType.EXPENSE).map((cat) => (
-              <div key={cat.id} className="flex items-center justify-between p-5 glass-card group hover:border-white/20 transition-all">
+              <div key={cat.id} className="flex items-center justify-between p-5 glass-card group hover:border-brand/20 transition-all">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/5" style={{ backgroundColor: cat.color + '20', color: cat.color }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-brand/5 transition-all transition-colors duration-300" style={{ backgroundColor: cat.color + '20', color: cat.color }}>
                     {(() => {
                       const item = AVAILABLE_ICONS.find(i => i.name === cat.icon);
                       const Icon = item ? item.icon : Tag;
                       return <Icon className="w-5 h-5" />;
                     })()}
                   </div>
-                  <span className="font-bold text-white uppercase tracking-tight">{cat.name}</span>
+                  <span className="font-bold text-text-main uppercase tracking-tight">{cat.name}</span>
                 </div>
                 <button
                   onClick={() => setCatToDelete(cat)}
-                  className="p-2 text-gray-700 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                  className="p-2 text-text-muted hover:text-rose-500 transition-colors opacity-100 md:opacity-0 group-hover:opacity-100"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -196,26 +196,26 @@ export default function CategoryList({ user }: CategoryListProps) {
         </div>
 
         <div className="space-y-6">
-          <h2 className="text-xl font-black flex items-center gap-3 text-white">
-            <ArrowUpCircle className="w-5 h-5 text-white" />
+          <h2 className="text-xl font-black flex items-center gap-3 text-text-main">
+            <ArrowUpCircle className="w-5 h-5 text-brand" />
             Pemasukan
           </h2>
           <div className="grid gap-4">
             {categories.filter(c => c.type === TransactionType.INCOME).map((cat) => (
-              <div key={cat.id} className="flex items-center justify-between p-5 glass-card group hover:border-white/20 transition-all">
+              <div key={cat.id} className="flex items-center justify-between p-5 glass-card group hover:border-brand/20 transition-all">
                 <div className="flex items-center gap-4">
-                  <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-white/5" style={{ backgroundColor: cat.color + '20', color: cat.color }}>
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center border border-brand/5 transition-all transition-colors duration-300" style={{ backgroundColor: cat.color + '20', color: cat.color }}>
                     {(() => {
                       const item = AVAILABLE_ICONS.find(i => i.name === cat.icon);
                       const Icon = item ? item.icon : Tag;
                       return <Icon className="w-5 h-5" />;
                     })()}
                   </div>
-                  <span className="font-bold text-white uppercase tracking-tight">{cat.name}</span>
+                  <span className="font-bold text-text-main uppercase tracking-tight">{cat.name}</span>
                 </div>
                 <button
                   onClick={() => setCatToDelete(cat)}
-                  className="p-2 text-gray-700 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                  className="p-2 text-text-muted hover:text-rose-500 transition-colors opacity-100 md:opacity-0 group-hover:opacity-100"
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>

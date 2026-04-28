@@ -109,21 +109,21 @@ export default function Budgeting({ user }: BudgetingProps) {
     <div className="space-y-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 md:gap-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase">Manajemen Anggaran</h1>
-          <p className="text-gray-500 font-bold text-[10px] md:text-xs uppercase tracking-widest mt-1">Kendalikan pengeluaran bulanan Anda.</p>
+          <h1 className="text-2xl md:text-3xl font-black text-text-main tracking-tight uppercase">Manajemen Anggaran</h1>
+          <p className="text-text-muted font-bold text-[10px] md:text-xs uppercase tracking-widest mt-1">Kendalikan pengeluaran bulanan Anda.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8">
         <div className="lg:col-span-1">
           <div className="glass-card p-6 md:p-8 lg:sticky lg:top-24">
-            <h2 className="text-xs font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
-              <ShieldAlert className="w-4 h-4 text-emerald-400" />
+            <h2 className="text-xs font-black text-text-main uppercase tracking-widest mb-6 flex items-center gap-2">
+              <ShieldAlert className="w-4 h-4 text-brand" />
               {editingBudget.id ? 'Edit Anggaran' : 'Atur Anggaran Baru'}
             </h2>
             <form onSubmit={handleSaveBudget} className="space-y-6">
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Kategori Pengeluaran</label>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Kategori Pengeluaran</label>
                 <select
                   required
                   disabled={!!editingBudget.id}
@@ -138,7 +138,7 @@ export default function Budgeting({ user }: BudgetingProps) {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Limit Anggaran (Rp)</label>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Limit Anggaran (Rp)</label>
                 <input
                   required
                   type="number"
@@ -159,7 +159,7 @@ export default function Budgeting({ user }: BudgetingProps) {
                   <button 
                     type="button"
                     onClick={() => setEditingBudget({ categoryId: '', amount: '' })}
-                    className="w-full bg-[#1a1a1a] text-gray-400 py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:text-white transition-colors"
+                    className="w-full bg-bg-main text-text-muted py-3 rounded-2xl font-black text-[10px] uppercase tracking-widest hover:text-text-main transition-colors border border-border-subtle"
                   >
                     Batal
                   </button>
@@ -171,9 +171,9 @@ export default function Budgeting({ user }: BudgetingProps) {
 
         <div className="lg:col-span-2 space-y-4">
           {budgets.length === 0 ? (
-            <div className="py-20 text-center bg-[#0d0d0d] rounded-3xl border-2 border-dashed border-[#1a1a1a]">
-              <Target className="w-12 h-12 text-gray-700 mx-auto mb-4" />
-              <p className="text-gray-500 font-bold uppercase text-[10px] tracking-widest">Belum ada anggaran yang diatur</p>
+            <div className="py-20 text-center bg-bg-card rounded-3xl border-2 border-dashed border-border-subtle">
+              <Target className="w-12 h-12 text-text-muted mx-auto mb-4" />
+              <p className="text-text-muted font-bold uppercase text-[10px] tracking-widest">Belum ada anggaran yang diatur</p>
             </div>
           ) : (
             budgets.map(budget => {
@@ -185,23 +185,23 @@ export default function Budgeting({ user }: BudgetingProps) {
                 <div key={budget.id} className="glass-card p-6 flex flex-col gap-4 group">
                   <div className="flex justify-between items-start">
                     <div>
-                      <h3 className="text-lg font-black text-white uppercase tracking-tighter">{budget.categoryName}</h3>
-                      <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Batas: {formatCurrency(budget.amount)}</p>
+                      <h3 className="text-lg font-black text-text-main uppercase tracking-tighter">{budget.categoryName}</h3>
+                      <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Batas: {formatCurrency(budget.amount)}</p>
                     </div>
                     <div className="text-right">
-                      <p className={`text-lg font-black font-mono ${isOver ? 'text-rose-500' : 'text-emerald-400'}`}>
+                      <p className={`text-lg font-black font-mono ${isOver ? 'text-rose-500' : 'text-emerald-500'}`}>
                         {formatCurrency(spent)}
                       </p>
-                      <p className="text-[10px] font-black text-gray-600 uppercase tracking-widest">Terpakai Bulan Ini</p>
+                      <p className="text-[10px] font-black text-text-muted uppercase tracking-widest">Terpakai Bulan Ini</p>
                     </div>
                   </div>
 
                   <div className="space-y-4">
-                    <div className="w-full h-2 bg-white/5 rounded-full overflow-hidden">
+                    <div className="w-full h-2 bg-text-main/5 rounded-full overflow-hidden border border-border-subtle">
                       <motion.div 
                         initial={{ width: 0 }}
                         animate={{ width: `${percent}%` }}
-                        className={`h-full rounded-full transition-colors duration-500 ${isOver ? 'bg-rose-500' : percent > 80 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                        className={`h-full rounded-full transition-colors duration-500 ${isOver ? 'bg-rose-500' : percent > 80 ? 'bg-amber-500' : 'bg-brand'}`}
                       />
                     </div>
                     
@@ -212,22 +212,22 @@ export default function Budgeting({ user }: BudgetingProps) {
                         ) : (
                           <CheckCircle2 className="w-3 h-3 text-emerald-500" />
                         )}
-                        <span className={`text-[9px] font-black uppercase tracking-widest ${isOver ? 'text-rose-500' : 'text-gray-500'}`}>
+                        <span className={`text-[9px] font-black uppercase tracking-widest ${isOver ? 'text-rose-500' : 'text-text-muted'}`}>
                           {isOver ? 'Melebihi Anggaran!' : percent > 80 ? 'Hampir Habis' : 'Dalam Batas Aman'}
                         </span>
                       </div>
 
-                      <div className="flex items-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center gap-4 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => startEdit(budget)}
-                          className="text-[9px] font-black text-gray-500 hover:text-white uppercase tracking-widest transition-colors"
+                          className="text-[9px] font-black text-text-muted hover:text-text-main uppercase tracking-widest transition-colors"
                         >
                           Edit
                         </button>
                         
                         <button 
                           onClick={() => setBudgetToDelete(budget)}
-                          className="text-[9px] font-black text-gray-700 hover:text-rose-500 uppercase tracking-widest transition-colors"
+                          className="text-[9px] font-black text-text-muted hover:text-rose-500 uppercase tracking-widest transition-colors"
                         >
                           Hapus
                         </button>

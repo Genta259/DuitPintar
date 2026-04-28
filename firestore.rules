@@ -39,7 +39,7 @@ service cloud.firestore {
     function isValidTransaction(data) {
       return isOwner(data) &&
              data.get('amount', 0) is number &&
-             data.get('type', '') in ['income', 'expense'] &&
+             data.get('type', '') in ['income', 'expense', 'transfer'] &&
              data.get('category', '') is string &&
              data.get('assetId', '') is string;
     }

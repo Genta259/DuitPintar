@@ -84,7 +84,10 @@ export default function AssetList({ user }: AssetListProps) {
     }
 
     const destAsset = assets.find(a => a.id === toId);
-    if (!destAsset) return;
+    if (!destAsset) {
+      alert('Aset tujuan tidak ditemukan.');
+      return;
+    }
 
     try {
       const batch = writeBatch(db);
@@ -116,8 +119,11 @@ export default function AssetList({ user }: AssetListProps) {
       await batch.commit();
       setIsTransferring(false);
       setTransferData({ fromId: '', toId: '', amount: '' as any });
+      alert('Dana berhasil dipindahkan!');
     } catch (error) {
-      handleFirestoreError(error, OperationType.WRITE, 'assets');
+      console.error('Transfer error:', error);
+      handleFirestoreError(error, OperationType.WRITE, 'assets_transfer');
+      alert('Gagal memproses pemindahan dana. Silakan coba lagi.');
     }
   };
 
@@ -157,13 +163,13 @@ export default function AssetList({ user }: AssetListProps) {
     <div className="space-y-6 md:space-y-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div>
-          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase">Kelola Aset & Tabungan</h1>
-          <p className="text-gray-500 font-bold text-[10px] md:text-xs uppercase tracking-widest mt-1">Kelola kekayaan dan simpanan Anda.</p>
+          <h1 className="text-2xl md:text-3xl font-black text-text-main tracking-tight uppercase">Kelola Aset & Tabungan</h1>
+          <p className="text-text-muted font-bold text-[10px] md:text-xs uppercase tracking-widest mt-1">Kelola kekayaan dan simpanan Anda.</p>
         </div>
         <div className="flex gap-4 w-full md:w-auto">
           <button
             onClick={() => setIsTransferring(true)}
-            className="flex-1 md:flex-none flex items-center justify-center gap-3 px-6 py-4 bg-[#141414] text-white border border-[#262626] rounded-2xl hover:bg-white hover:text-black transition-all font-black text-[10px] uppercase tracking-widest"
+            className="flex-1 md:flex-none flex items-center justify-center gap-3 px-6 py-4 bg-bg-card text-text-main border border-border-subtle rounded-2xl hover:bg-brand hover:text-bg-main transition-all font-black text-[10px] uppercase tracking-widest"
           >
             <ArrowRightLeft className="w-4 h-4" />
             <span>Pindah Dana</span>
@@ -188,19 +194,19 @@ export default function AssetList({ user }: AssetListProps) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-[#141414] p-6 md:p-8 rounded-3xl border border-[#262626] shadow-2xl"
+            className="bg-bg-card p-6 md:p-8 rounded-3xl border border-border-subtle shadow-2xl"
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-[10px] md:text-xs font-black text-white uppercase tracking-widest">
+              <h2 className="text-[10px] md:text-xs font-black text-text-main uppercase tracking-widest">
                 {editingId ? 'Edit Aset' : 'Tambah Aset Baru'}
               </h2>
-              <button onClick={() => { setIsAdding(false); setEditingId(null); }} className="text-gray-500 hover:text-white">
+              <button onClick={() => { setIsAdding(false); setEditingId(null); }} className="text-text-muted hover:text-text-main">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleAddAsset} className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Nama Aset</label>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Nama Aset</label>
                 <input
                   required
                   type="text"
@@ -211,7 +217,7 @@ export default function AssetList({ user }: AssetListProps) {
                 />
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Tipe</label>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Tipe</label>
                 <select
                   value={newAsset.type}
                   onChange={e => setNewAsset({ ...newAsset, type: e.target.value as AssetType })}
@@ -224,7 +230,7 @@ export default function AssetList({ user }: AssetListProps) {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Saldo Pengisian</label>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Saldo Pengisian</label>
                 <input
                   required
                   type="number"
@@ -246,19 +252,19 @@ export default function AssetList({ user }: AssetListProps) {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-[#141414] p-6 md:p-8 rounded-3xl border border-[#262626] shadow-2xl"
+            className="bg-bg-card p-6 md:p-8 rounded-3xl border border-border-subtle shadow-2xl"
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-[10px] md:text-xs font-black text-white uppercase tracking-widest">
+              <h2 className="text-[10px] md:text-xs font-black text-text-main uppercase tracking-widest">
                 Pindah Dana (Transfer)
               </h2>
-              <button onClick={() => setIsTransferring(false)} className="text-gray-500 hover:text-white">
+              <button onClick={() => setIsTransferring(false)} className="text-text-muted hover:text-text-main">
                 <X className="w-5 h-5" />
               </button>
             </div>
             <form onSubmit={handleTransfer} className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Dari Aset</label>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Dari Aset</label>
                 <select
                   required
                   value={transferData.fromId}
@@ -270,7 +276,7 @@ export default function AssetList({ user }: AssetListProps) {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Ke Aset</label>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Ke Aset</label>
                 <select
                   required
                   value={transferData.toId}
@@ -282,7 +288,7 @@ export default function AssetList({ user }: AssetListProps) {
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Jumlah Pindah</label>
+                <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Jumlah Pindah</label>
                 <input
                   required
                   type="number"
@@ -305,34 +311,34 @@ export default function AssetList({ user }: AssetListProps) {
           <motion.div
             layout
             key={asset.id}
-            className="bg-[#141414] p-6 md:p-8 rounded-3xl border border-[#262626] shadow-xl relative group hover:border-[#404040] transition-all"
+            className="bg-bg-card p-6 md:p-8 rounded-3xl border border-border-subtle shadow-xl relative group hover:border-brand/20 transition-all"
           >
             <div className="flex items-center gap-4 md:gap-5 mb-6 md:mb-8">
-              <div className="p-3 md:p-4 bg-white/5 text-white rounded-2xl border border-white/10 group-hover:bg-white group-hover:text-black transition-all">
+              <div className="p-3 md:p-4 bg-brand/5 text-text-main rounded-2xl border border-brand/10 group-hover:bg-brand group-hover:text-bg-main transition-all">
                 {getIcon(asset.type)}
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="font-black text-white text-base md:text-lg tracking-tight truncate uppercase">{asset.name}</h3>
-                <p className="text-[9px] md:text-[10px] text-gray-600 uppercase font-black tracking-widest">{asset.type}</p>
+                <h3 className="font-black text-text-main text-base md:text-lg tracking-tight truncate uppercase">{asset.name}</h3>
+                <p className="text-[9px] md:text-[10px] text-text-muted uppercase font-black tracking-widest">{asset.type}</p>
               </div>
               <div className="flex items-center gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                 <button
                   onClick={() => startEdit(asset)}
-                  className="p-1 md:p-2 text-gray-500 hover:text-white transition-colors"
+                  className="p-1 md:p-2 text-text-muted hover:text-text-main transition-colors"
                 >
                   <Edit2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </button>
                 <button
                   onClick={() => setAssetToDelete(asset)}
-                  className="p-1 md:p-2 text-gray-700 hover:text-rose-500 transition-colors"
+                  className="p-1 md:p-2 text-gray-400 hover:text-rose-500 transition-colors"
                 >
                   <Trash2 className="w-3.5 h-3.5 md:w-4 md:h-4" />
                 </button>
               </div>
             </div>
             <div className="space-y-1">
-              <p className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest">Saldo Sekarang</p>
-              <p className="text-2xl md:text-3xl font-black text-white font-mono tracking-tighter leading-none">{formatCurrency(asset.balance)}</p>
+              <p className="text-[9px] md:text-[10px] font-black text-text-muted uppercase tracking-widest">Saldo Sekarang</p>
+              <p className="text-2xl md:text-3xl font-black text-text-main font-mono tracking-tighter leading-none">{formatCurrency(asset.balance)}</p>
             </div>
           </motion.div>
         ))}

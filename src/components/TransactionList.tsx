@@ -94,7 +94,7 @@ export default function TransactionList({ user }: TransactionListProps) {
 
   const getCategoryIcon = (categoryName: string) => {
     const category = categories.find(c => c.name === categoryName);
-    if (!category) return <Tag className="w-4 h-4 text-gray-500" />;
+    if (!category) return <Tag className="w-4 h-4 text-text-muted" />;
     const Icon = CATEGORY_ICONS[category.icon] || Tag;
     return <Icon className="w-4 h-4" style={{ color: category.color }} />;
   };
@@ -250,7 +250,7 @@ export default function TransactionList({ user }: TransactionListProps) {
   return (
     <div className="space-y-10">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-black text-white tracking-tight uppercase">Catatan Transaksi</h1>
+        <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">Catatan Transaksi</h1>
         <button
           onClick={() => {
             setEditingTxId(null);
@@ -266,23 +266,23 @@ export default function TransactionList({ user }: TransactionListProps) {
 
       {/* Filters */}
       <div className="space-y-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-stretch md:items-center bg-[#141414] p-6 rounded-[30px] border border-[#262626] shadow-xl">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-stretch md:items-center bg-bg-card p-6 rounded-[30px] border border-border-subtle shadow-xl">
           <div className="md:col-span-2 relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-muted" />
             <input
               type="text"
               placeholder="Cari transaksi..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-black/40 border border-[#262626] rounded-2xl py-3 pl-12 pr-4 text-xs font-black uppercase tracking-widest focus:border-white/20 outline-none transition-all"
+              className="w-full bg-bg-main/40 border border-border-subtle rounded-2xl py-3 pl-12 pr-4 text-xs font-black uppercase tracking-widest focus:border-brand/20 outline-none transition-all text-text-main"
             />
           </div>
           <div className="relative">
-            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value as any)}
-              className="w-full bg-black/40 border border-[#262626] rounded-2xl py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none appearance-none"
+              className="w-full bg-bg-main/40 border border-border-subtle rounded-2xl py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none appearance-none text-text-main"
             >
               <option value="all">Semua Tipe</option>
               <option value={TransactionType.INCOME}>Pemasukan</option>
@@ -291,11 +291,11 @@ export default function TransactionList({ user }: TransactionListProps) {
             </select>
           </div>
           <div className="relative">
-            <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+            <Tag className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="w-full bg-black/40 border border-[#262626] rounded-2xl py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none appearance-none"
+              className="w-full bg-bg-main/40 border border-border-subtle rounded-2xl py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none appearance-none text-text-main"
             >
               <option value="all">Semua Kategori</option>
               {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
@@ -305,22 +305,22 @@ export default function TransactionList({ user }: TransactionListProps) {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="relative col-span-1">
-            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(e.target.value === 'all' ? 'all' : Number(e.target.value))}
-              className="w-full bg-[#141414] border border-[#262626] rounded-2xl py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none appearance-none"
+              className="w-full bg-bg-card border border-border-subtle rounded-2xl py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none appearance-none text-text-main"
             >
               <option value="all">Semua Bulan</option>
               {months.map((m, i) => <option key={i} value={i}>{m}</option>)}
             </select>
           </div>
           <div className="relative col-span-1">
-            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted" />
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="w-full bg-[#141414] border border-[#262626] rounded-2xl py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none appearance-none"
+              className="w-full bg-bg-card border border-border-subtle rounded-2xl py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none appearance-none text-text-main"
             >
               {years.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
@@ -334,36 +334,36 @@ export default function TransactionList({ user }: TransactionListProps) {
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -20 }}
-            className="bg-[#141414] p-8 rounded-3xl border border-[#262626] shadow-2xl"
+            className="bg-bg-card p-8 rounded-3xl border border-border-subtle shadow-2xl"
           >
             <form onSubmit={handleAddTransaction} className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="col-span-full border-b border-[#262626] pb-4 mb-4 flex justify-between items-center">
-                <h2 className="text-xl font-black text-white uppercase tracking-tighter">
+              <div className="col-span-full border-b border-border-subtle pb-4 mb-4 flex justify-between items-center">
+                <h2 className="text-xl font-black text-text-main uppercase tracking-tighter">
                   {editingTxId ? 'Edit Transaksi' : 'Catat Transaksi Baru'}
                 </h2>
               </div>
               <div className="space-y-6">
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Jenis Arus</label>
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Jenis Arus</label>
                   <div className="grid grid-cols-2 gap-3">
                     <button
                       type="button"
                       onClick={() => setNewTx({ ...newTx, type: TransactionType.EXPENSE })}
-                      className={`py-3 rounded-xl text-sm font-bold border transition-all ${newTx.type === TransactionType.EXPENSE ? 'bg-white text-black border-white' : 'border-[#262626] text-gray-500 hover:text-white'}`}
+                      className={`py-3 rounded-xl text-sm font-bold border transition-all ${newTx.type === TransactionType.EXPENSE ? 'bg-brand text-bg-main border-brand' : 'border-border-subtle text-text-muted hover:text-text-main'}`}
                     >
                       Keluar
                     </button>
                     <button
                       type="button"
                       onClick={() => setNewTx({ ...newTx, type: TransactionType.INCOME })}
-                      className={`py-3 rounded-xl text-sm font-bold border transition-all ${newTx.type === TransactionType.INCOME ? 'bg-white text-black border-white' : 'border-[#262626] text-gray-500 hover:text-white'}`}
+                      className={`py-3 rounded-xl text-sm font-bold border transition-all ${newTx.type === TransactionType.INCOME ? 'bg-brand text-bg-main border-brand' : 'border-border-subtle text-text-muted hover:text-text-main'}`}
                     >
                       Masuk
                     </button>
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Jumlah Nominal</label>
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Jumlah Nominal</label>
                   <input
                     required
                     type="number"
@@ -377,7 +377,7 @@ export default function TransactionList({ user }: TransactionListProps) {
 
               <div className="space-y-6">
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Sumber Dana (Aset)</label>
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Sumber Dana (Aset)</label>
                   <select
                     required
                     value={newTx.assetId}
@@ -389,7 +389,7 @@ export default function TransactionList({ user }: TransactionListProps) {
                   </select>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Pilih Kategori</label>
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Pilih Kategori</label>
                   <select
                     required
                     value={newTx.category}
@@ -412,7 +412,7 @@ export default function TransactionList({ user }: TransactionListProps) {
 
               <div className="space-y-6">
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Tanggal Kejadian</label>
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Tanggal Kejadian</label>
                   <input
                     required
                     type="date"
@@ -426,7 +426,7 @@ export default function TransactionList({ user }: TransactionListProps) {
                   <button type="button" onClick={() => {
                     setIsAdding(false);
                     setEditingTxId(null);
-                  }} className="px-5 py-3 text-gray-500 hover:text-white font-bold">Batal</button>
+                  }} className="px-5 py-3 text-text-muted hover:text-text-main font-bold">Batal</button>
                 </div>
               </div>
             </form>
@@ -434,47 +434,47 @@ export default function TransactionList({ user }: TransactionListProps) {
         )}
       </AnimatePresence>
 
-      <div className="bg-[#141414] rounded-3xl border border-[#262626] shadow-2xl overflow-hidden">
+      <div className="bg-bg-card rounded-3xl border border-border-subtle shadow-2xl overflow-hidden">
         {/* Desktop Table View */}
         <div className="hidden md:block overflow-x-auto">
           <table className="w-full text-left">
-            <thead className="bg-[#0f0f0f] border-b border-[#262626]">
+            <thead className="bg-bg-main border-b border-border-subtle">
               <tr>
-                <th className="px-8 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest">Waktu</th>
-                <th className="px-8 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest">Kategori</th>
-                <th className="px-8 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest">Aset</th>
-                <th className="px-8 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest">Nominal</th>
-                <th className="px-8 py-5 text-[10px] font-black text-gray-500 uppercase tracking-widest text-right">Aksi</th>
+                <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-widest">Waktu</th>
+                <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-widest">Kategori</th>
+                <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-widest">Aset</th>
+                <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-widest">Nominal</th>
+                <th className="px-8 py-5 text-[10px] font-black text-text-muted uppercase tracking-widest text-right">Aksi</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#262626]">
+            <tbody className="divide-y divide-border-subtle">
               {filteredTransactions.length === 0 ? (
                 <tr>
-                  <td colSpan={5} className="px-8 py-20 text-center text-gray-500 font-black uppercase text-[10px] tracking-widest">
+                  <td colSpan={5} className="px-8 py-20 text-center text-text-muted font-black uppercase text-[10px] tracking-widest">
                     Tidak ada transaksi ditemukan
                   </td>
                 </tr>
               ) : (
                 filteredTransactions.map((tx) => (
-                  <tr key={tx.id} className="group hover:bg-white/5 transition-colors">
+                  <tr key={tx.id} className="group hover:bg-brand/5 transition-colors">
                     <td className="px-8 py-6">
                       <div className="flex flex-col">
-                        <span className="text-sm font-black text-gray-300">{new Date(tx.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
-                        {tx.notes && <span className="text-[10px] text-gray-600 font-black uppercase truncate max-w-[150px]">{tx.notes}</span>}
+                        <span className="text-sm font-black text-text-main">{new Date(tx.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}</span>
+                        {tx.notes && <span className="text-[10px] text-text-muted font-black uppercase truncate max-w-[150px]">{tx.notes}</span>}
                       </div>
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
-                        <div className="p-1.5 bg-white/5 rounded-lg border border-white/5">
+                        <div className="p-1.5 bg-brand/5 rounded-lg border border-brand/5">
                           {getCategoryIcon(tx.category)}
                         </div>
-                        <span className="text-sm font-black text-white">{tx.category}</span>
+                        <span className="text-sm font-black text-text-main">{tx.category}</span>
                       </div>
                     </td>
                     <td className="px-8 py-6">
                       <div className="flex items-center gap-3">
-                        <Wallet className="w-4 h-4 text-gray-700" />
-                        <span className="text-sm text-gray-500 font-bold">{assets.find(a => a.id === tx.assetId)?.name || 'Unknown'}</span>
+                        <Wallet className="w-4 h-4 text-text-muted" />
+                        <span className="text-sm text-text-muted font-bold">{assets.find(a => a.id === tx.assetId)?.name || 'Unknown'}</span>
                       </div>
                     </td>
                     <td className="px-8 py-6">
@@ -482,26 +482,26 @@ export default function TransactionList({ user }: TransactionListProps) {
                         onClick={() => startEdit(tx)}
                         className={`text-sm font-black font-mono hover:underline ${
                           tx.type === TransactionType.INCOME 
-                            ? 'text-emerald-400' 
+                            ? 'text-emerald-500' 
                             : tx.type === TransactionType.EXPENSE 
-                              ? 'text-rose-400' 
-                              : 'text-blue-400'
+                              ? 'text-rose-500' 
+                              : 'text-blue-500'
                         }`}
                       >
                         {tx.type === TransactionType.INCOME ? '+' : tx.type === TransactionType.EXPENSE ? '-' : ''}{formatCurrency(tx.amount)}
                       </button>
                     </td>
                     <td className="px-8 py-6 text-right">
-                      <div className="flex items-center justify-end gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <div className="flex items-center justify-end gap-1 opacity-100 md:opacity-0 group-hover:opacity-100 transition-opacity">
                         <button
                           onClick={() => startEdit(tx)}
-                          className="p-2 text-gray-700 hover:text-white transition-colors"
+                          className="p-2 text-text-muted hover:text-text-main transition-colors"
                         >
                           <Edit2 className="w-4 h-4" />
                         </button>
                         <button
                           onClick={() => setTxToDelete(tx)}
-                          className="p-2 text-gray-700 hover:text-rose-600 transition-colors"
+                          className="p-2 text-text-muted hover:text-rose-600 transition-colors"
                         >
                           <Trash2 className="w-4 h-4" />
                         </button>
@@ -515,53 +515,53 @@ export default function TransactionList({ user }: TransactionListProps) {
         </div>
 
         {/* Mobile List View */}
-        <div className="md:hidden divide-y divide-[#262626]">
+        <div className="md:hidden divide-y divide-border-subtle">
           {filteredTransactions.length === 0 ? (
-            <div className="px-6 py-12 text-center text-gray-500 font-black uppercase text-[10px] tracking-widest">
+            <div className="px-6 py-12 text-center text-text-muted font-black uppercase text-[10px] tracking-widest">
               Tidak ada transaksi ditemukan
             </div>
           ) : (
             filteredTransactions.map((tx) => (
-              <div key={tx.id} className="p-5 active:bg-white/5 transition-colors">
+              <div key={tx.id} className="p-5 active:bg-brand/5 transition-colors">
                 <div className="flex justify-between items-start mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="p-2 bg-white/5 rounded-xl border border-white/5">
+                    <div className="p-2 bg-brand/5 rounded-xl border border-brand/5">
                       {getCategoryIcon(tx.category)}
                     </div>
                     <div>
-                      <p className="text-sm font-black text-white">{tx.category}</p>
-                      <p className="text-[10px] text-gray-600 font-black uppercase tracking-tight">
+                      <p className="text-sm font-black text-text-main">{tx.category}</p>
+                      <p className="text-[10px] text-text-muted font-black uppercase tracking-tight">
                         {new Date(tx.date).toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })}
                       </p>
                     </div>
                   </div>
                   <div className="text-right">
                     <p className={`text-sm font-black font-mono ${
-                      tx.type === TransactionType.INCOME ? 'text-emerald-400' : 
-                      tx.type === TransactionType.EXPENSE ? 'text-rose-400' : 
-                      'text-blue-400'
+                      tx.type === TransactionType.INCOME ? 'text-emerald-500' : 
+                      tx.type === TransactionType.EXPENSE ? 'text-rose-500' : 
+                      'text-blue-500'
                     }`}>
                       {tx.type === TransactionType.INCOME ? '+' : tx.type === TransactionType.EXPENSE ? '-' : ''}{formatCurrency(tx.amount)}
                     </p>
-                    <p className="text-[10px] text-gray-600 font-bold uppercase truncate max-w-[120px]">
+                    <p className="text-[10px] text-text-muted font-bold uppercase truncate max-w-[120px]">
                       {assets.find(a => a.id === tx.assetId)?.name || 'N/A'}
                     </p>
                   </div>
                 </div>
-                <div className="flex justify-between items-center bg-black/20 p-2 rounded-xl mt-2">
-                  <div className="flex-1 text-[10px] text-gray-500 uppercase font-black truncate pr-4">
+                <div className="flex justify-between items-center bg-bg-main/20 p-2 rounded-xl mt-2">
+                  <div className="flex-1 text-[10px] text-text-muted uppercase font-black truncate pr-4">
                     {tx.notes || ''}
                   </div>
                   <div className="flex gap-1">
                     <button
                       onClick={() => startEdit(tx)}
-                      className="p-2 text-gray-500 active:text-white transition-colors"
+                      className="p-2 text-text-muted active:text-text-main transition-colors"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
                     <button
                       onClick={() => setTxToDelete(tx)}
-                      className="p-2 text-gray-500 active:text-rose-600 transition-colors"
+                      className="p-2 text-text-muted active:text-rose-600 transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>

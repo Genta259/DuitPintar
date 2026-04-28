@@ -52,14 +52,14 @@ export default function Reports({ user }: ReportsProps) {
     .reduce((acc, curr) => acc + curr.amount, 0);
 
   const COLORS = [
-    '#ffffff', // White
-    '#34d399', // Emerald
-    '#fbbf24', // Amber
-    '#60a5fa', // Blue
-    '#f87171', // Red
-    '#a78bfa', // Violet
-    '#fb7185', // Rose
-    '#22d3ee', // Cyan
+    '#3b82f6', // blue-500
+    '#10b981', // emerald-500
+    '#f59e0b', // amber-500
+    '#ef4444', // red-500
+    '#8b5cf6', // violet-500
+    '#ec4899', // pink-500
+    '#06b6d4', // cyan-500
+    '#f97316', // orange-500
   ];
 
   const downloadReport = () => {
@@ -156,13 +156,13 @@ export default function Reports({ user }: ReportsProps) {
   return (
     <div className="space-y-10">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-        <h1 className="text-3xl font-black text-white tracking-tight uppercase">Analisis Keuangan</h1>
+        <h1 className="text-3xl font-black text-text-main tracking-tight uppercase">Analisis Keuangan</h1>
         <div className="flex flex-wrap gap-4">
           <div className="flex gap-2">
             <select
               value={selectedMonth}
               onChange={(e) => setSelectedMonth(Number(e.target.value))}
-              className="input-dark bg-[#141414] font-bold text-xs"
+              className="input-dark bg-bg-card font-bold text-xs"
             >
               {Array.from({ length: 12 }, (_, i) => (
                 <option key={i} value={i}>
@@ -173,14 +173,14 @@ export default function Reports({ user }: ReportsProps) {
             <select
               value={selectedYear}
               onChange={(e) => setSelectedYear(Number(e.target.value))}
-              className="input-dark bg-[#141414] font-bold text-xs"
+              className="input-dark bg-bg-card font-bold text-xs"
             >
               {[2024, 2025, 2026].map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
           <button
             onClick={downloadReport}
-            className="flex items-center gap-2 px-6 py-2 bg-white text-black font-black text-[10px] uppercase tracking-widest hover:bg-gray-200 transition-colors rounded-xl"
+            className="flex items-center gap-2 px-6 py-2 bg-brand text-bg-main font-black text-[10px] uppercase tracking-widest hover:bg-brand/90 transition-colors rounded-xl shadow-lg border border-brand/20"
           >
             <Download className="w-4 h-4" />
             Download PDF
@@ -191,10 +191,10 @@ export default function Reports({ user }: ReportsProps) {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-10">
         <div className="glass-card p-6 md:p-10 relative overflow-hidden group">
           <div className="absolute -right-20 -top-20 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity pointer-events-none">
-            <PieChartIcon className="w-64 md:w-96 h-64 md:h-96 text-white" />
+            <PieChartIcon className="w-64 md:w-96 h-64 md:h-96 text-text-main" />
           </div>
-          <h2 className="text-lg md:text-xl font-black mb-10 flex items-center gap-3 text-white">
-            <PieChartIcon className="w-5 h-5 text-gray-500" />
+          <h2 className="text-lg md:text-xl font-black mb-10 flex items-center gap-3 text-text-main">
+            <PieChartIcon className="w-5 h-5 text-text-muted" />
             Alokasi Pengeluaran
           </h2>
           <div className="h-64 md:h-80">
@@ -217,24 +217,24 @@ export default function Reports({ user }: ReportsProps) {
                   </Pie>
                   <Tooltip 
                     contentStyle={{ 
-                      backgroundColor: '#1a1a1a', 
+                      backgroundColor: 'var(--color-bg-card)', 
                       borderRadius: '16px', 
-                      border: '1px solid #333',
-                      color: '#fff',
-                      boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                      border: '1px solid var(--color-border-subtle)',
+                      color: 'var(--color-text-main)',
+                      boxShadow: '0 20px 40px rgba(0,0,0,0.1)',
                       padding: '12px'
                     }}
-                    itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: 'bold' }}
+                    itemStyle={{ color: 'var(--color-text-main)', fontSize: '10px', fontWeight: 'bold' }}
                     formatter={(value: number) => formatCurrency(value)} 
                   />
                   <Legend 
                     iconType="circle" 
-                    wrapperStyle={{ paddingTop: '20px', fontSize: '8px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em' }} 
+                    wrapperStyle={{ paddingTop: '20px', fontSize: '8px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', color: 'var(--color-text-muted)' }} 
                   />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
-              <div className="h-full flex items-center justify-center text-gray-700 font-black uppercase tracking-widest text-[10px]">
+              <div className="h-full flex items-center justify-center text-text-muted font-black uppercase tracking-widest text-[10px]">
                 Tidak ada data.
               </div>
             )}
@@ -243,38 +243,38 @@ export default function Reports({ user }: ReportsProps) {
 
         <div className="glass-card p-6 md:p-10 flex flex-col justify-center relative overflow-hidden group">
           <div className="absolute -left-20 -bottom-20 opacity-[0.02] group-hover:opacity-[0.05] transition-opacity pointer-events-none">
-            <BarChart3 className="w-64 md:w-96 h-64 md:h-96 text-white" />
+            <BarChart3 className="w-64 md:w-96 h-64 md:h-96 text-text-main" />
           </div>
           <div className="space-y-8 md:space-y-12 relative z-10">
             <div className="group/item">
-              <p className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 md:mb-3">Arus Kas Masuk</p>
-              <div className="flex items-center justify-between border-b border-[#262626] pb-4 md:pb-5 group-hover/item:border-white transition-colors">
+              <p className="text-[9px] md:text-[10px] font-black text-text-muted uppercase tracking-widest mb-2 md:mb-3">Arus Kas Masuk</p>
+              <div className="flex items-center justify-between border-b border-border-subtle pb-4 md:pb-5 group-hover/item:border-brand transition-colors">
                 <div className="flex items-center gap-3 md:gap-4">
                   <div className="p-1.5 md:p-2 bg-emerald-500/10 rounded-lg">
-                    <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-emerald-400" />
+                    <TrendingUp className="w-5 h-5 md:w-6 md:h-6 text-emerald-500" />
                   </div>
-                  <span className="font-bold text-white uppercase text-[10px] md:text-xs tracking-widest">Pendapatan</span>
+                  <span className="font-bold text-text-main uppercase text-[10px] md:text-xs tracking-widest">Pendapatan</span>
                 </div>
-                <span className="text-xl md:text-3xl font-black text-emerald-400 font-mono tracking-tighter">{formatCurrency(totalIncome)}</span>
+                <span className="text-xl md:text-3xl font-black text-emerald-500 font-mono tracking-tighter">{formatCurrency(totalIncome)}</span>
               </div>
             </div>
             
             <div className="group/item">
-              <p className="text-[9px] md:text-[10px] font-black text-gray-500 uppercase tracking-widest mb-2 md:mb-3">Arus Kas Keluar</p>
-              <div className="flex items-center justify-between border-b border-[#262626] pb-4 md:pb-5 group-hover/item:border-rose-500 transition-colors">
+              <p className="text-[9px] md:text-[10px] font-black text-text-muted uppercase tracking-widest mb-2 md:mb-3">Arus Kas Keluar</p>
+              <div className="flex items-center justify-between border-b border-border-subtle pb-4 md:pb-5 group-hover/item:border-rose-500 transition-colors">
                 <div className="flex items-center gap-3 md:gap-4">
                   <div className="p-1.5 md:p-2 bg-rose-500/10 rounded-lg">
-                    <TrendingDown className="w-5 h-5 md:w-6 md:h-6 text-rose-400" />
+                    <TrendingDown className="w-5 h-5 md:w-6 md:h-6 text-rose-500" />
                   </div>
-                  <span className="font-bold text-gray-400 uppercase text-[10px] md:text-xs tracking-widest">Pengeluaran</span>
+                  <span className="font-bold text-text-muted uppercase text-[10px] md:text-xs tracking-widest">Pengeluaran</span>
                 </div>
-                <span className="text-xl md:text-3xl font-black text-rose-400 font-mono tracking-tighter">-{formatCurrency(totalExpense)}</span>
+                <span className="text-xl md:text-3xl font-black text-rose-500 font-mono tracking-tighter">-{formatCurrency(totalExpense)}</span>
               </div>
             </div>
 
-            <div className="p-6 md:p-10 bg-white shadow-[0_0_50px_rgba(255,255,255,0.1)] rounded-3xl text-center transition-transform hover:scale-[1.02]">
-              <p className="text-[9px] md:text-[10px] font-black text-gray-400 uppercase tracking-widest mb-3 md:mb-4">Efisiensi Tabungan Bersih</p>
-              <p className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${totalIncome - totalExpense >= 0 ? 'text-black' : 'text-rose-600'}`}>
+            <div className="p-6 md:p-10 bg-brand shadow-[0_0_50px_rgba(var(--brand-rgb),0.1)] rounded-3xl text-center transition-transform hover:scale-[1.02] border border-brand/20">
+              <p className="text-[9px] md:text-[10px] font-black text-bg-main/60 uppercase tracking-widest mb-3 md:mb-4">Efisiensi Tabungan Bersih</p>
+              <p className={`text-3xl md:text-5xl font-black font-mono tracking-tighter ${totalIncome - totalExpense >= 0 ? 'text-bg-main' : 'text-rose-900'}`}>
                 {totalIncome - totalExpense > 0 ? '+' : ''}{formatCurrency(totalIncome - totalExpense)}
               </p>
             </div>
