@@ -71,7 +71,7 @@ export default function Dashboard({ user }: DashboardProps) {
       snapshot.docs.forEach(doc => {
         const data = doc.data() as Transaction;
         if (data.type === TransactionType.INCOME) income += data.amount;
-        else expenses += data.amount;
+        else if (data.type === TransactionType.EXPENSE) expenses += data.amount;
       });
       setStats(prev => ({ ...prev, monthlyIncome: income, monthlyExpenses: expenses }));
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'transactions'));
@@ -234,8 +234,16 @@ export default function Dashboard({ user }: DashboardProps) {
             {recentTransactions.map((tx) => (
               <div key={tx.id} className="flex items-center justify-between group">
                 <div className="flex items-center gap-3 md:gap-4">
-                  <div className={`p-2 md:p-2.5 rounded-xl border transition-all ${tx.type === TransactionType.INCOME ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'}`}>
-                    {tx.type === TransactionType.INCOME ? <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5" /> : <ArrowDownRight className="w-4 h-4 md:w-5 md:h-5" />}
+                  <div className={`p-2 md:p-2.5 rounded-xl border transition-all ${
+                    tx.type === TransactionType.INCOME 
+                      ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' 
+                      : tx.type === TransactionType.EXPENSE 
+                        ? 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+                        : 'bg-blue-500/10 border-blue-500/20 text-blue-400'
+                  }`}>
+                    {tx.type === TransactionType.INCOME ? <ArrowUpRight className="w-4 h-4 md:w-5 md:h-5" /> : 
+                     tx.type === TransactionType.EXPENSE ? <ArrowDownRight className="w-4 h-4 md:w-5 md:h-5" /> :
+                     <ArrowLeftRight className="w-4 h-4 md:w-5 md:h-5" />}
                   </div>
                   <div>
                     <p className="font-bold text-white leading-none mb-1 text-sm md:text-base">{tx.category}</p>
@@ -244,8 +252,12 @@ export default function Dashboard({ user }: DashboardProps) {
                     </p>
                   </div>
                 </div>
-                <p className={`font-black font-mono text-xs md:text-sm ${tx.type === TransactionType.INCOME ? 'text-emerald-400' : 'text-rose-400'}`}>
-                  {tx.type === TransactionType.INCOME ? '+' : '-'}{formatCurrency(tx.amount)}
+                <p className={`font-black font-mono text-xs md:text-sm ${
+                  tx.type === TransactionType.INCOME ? 'text-emerald-400' : 
+                  tx.type === TransactionType.EXPENSE ? 'text-rose-400' : 
+                  'text-blue-400'
+                }`}>
+                  {tx.type === TransactionType.INCOME ? '+' : tx.type === TransactionType.EXPENSE ? '-' : ''}{formatCurrency(tx.amount)}
                 </p>
               </div>
             ))}

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, deleteDoc, serverTimestamp } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, addDoc, updateDoc, doc, deleteDoc, writeBatch } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../firebase';
-import { Asset, AssetType } from '../types';
+import { Asset, AssetType, TransactionType } from '../types';
 import { User } from 'firebase/auth';
 import { formatCurrency } from '../lib/utils';
-import { Plus, Trash2, Edit2, Wallet, Landmark, PieChart, Coins } from 'lucide-react';
+import { Plus, Trash2, Edit2, Wallet, Landmark, PieChart, Coins, ArrowRightLeft, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import DeleteConfirmationModal from './ui/DeleteConfirmationModal';
 
@@ -15,6 +15,7 @@ interface AssetListProps {
 export default function AssetList({ user }: AssetListProps) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [isAdding, setIsAdding] = useState(false);
+  const [isTransferring, setIsTransferring] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [assetToDelete, setAssetToDelete] = useState<Asset | null>(null);
@@ -22,6 +23,12 @@ export default function AssetList({ user }: AssetListProps) {
     name: '',
     type: AssetType.CASH,
     balance: '' as any,
+  });
+
+  const [transferData, setTransferData] = useState({
+    fromId: '',
+    toId: '',
+    amount: '' as any,
   });
 
   useEffect(() => {
@@ -57,6 +64,60 @@ export default function AssetList({ user }: AssetListProps) {
       setIsAdding(false);
     } catch (error) {
       handleFirestoreError(error, editingId ? OperationType.UPDATE : OperationType.CREATE, `assets/${editingId || ''}`);
+    }
+  };
+
+  const handleTransfer = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { fromId, toId, amount } = transferData;
+    const transferAmount = Number(amount);
+
+    if (!fromId || !toId || fromId === toId || !transferAmount || transferAmount <= 0) {
+      alert('Pilih aset asal dan tujuan yang berbeda, serta masukkan jumlah yang valid.');
+      return;
+    }
+
+    const sourceAsset = assets.find(a => a.id === fromId);
+    if (!sourceAsset || sourceAsset.balance < transferAmount) {
+      alert('Saldo aset asal tidak mencukupi.');
+      return;
+    }
+
+    const destAsset = assets.find(a => a.id === toId);
+    if (!destAsset) return;
+
+    try {
+      const batch = writeBatch(db);
+      
+      // Update Source
+      batch.update(doc(db, 'assets', fromId), {
+        balance: sourceAsset.balance - transferAmount,
+        updatedAt: new Date().toISOString(),
+      });
+
+      // Update Destination
+      batch.update(doc(db, 'assets', toId), {
+        balance: destAsset.balance + transferAmount,
+        updatedAt: new Date().toISOString(),
+      });
+
+      // Log transaction
+      const txRef = doc(collection(db, 'transactions'));
+      batch.set(txRef, {
+        userId: user.uid,
+        amount: transferAmount,
+        type: TransactionType.TRANSFER,
+        category: 'Pindah Dana',
+        date: new Date().toISOString(),
+        notes: `Pindah dari ${sourceAsset.name} ke ${destAsset.name}`,
+        assetId: fromId, // Primary asset for this record is source
+      });
+
+      await batch.commit();
+      setIsTransferring(false);
+      setTransferData({ fromId: '', toId: '', amount: '' as any });
+    } catch (error) {
+      handleFirestoreError(error, OperationType.WRITE, 'assets');
     }
   };
 
@@ -99,17 +160,26 @@ export default function AssetList({ user }: AssetListProps) {
           <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight uppercase">Kelola Aset & Tabungan</h1>
           <p className="text-gray-500 font-bold text-[10px] md:text-xs uppercase tracking-widest mt-1">Kelola kekayaan dan simpanan Anda.</p>
         </div>
-        <button
-          onClick={() => {
-            setEditingId(null);
-            setNewAsset({ name: '', type: AssetType.CASH, balance: '' as any });
-            setIsAdding(true);
-          }}
-          className="btn-primary w-full md:w-auto"
-        >
-          <Plus className="w-5 h-5" />
-          <span>Baru</span>
-        </button>
+        <div className="flex gap-4 w-full md:w-auto">
+          <button
+            onClick={() => setIsTransferring(true)}
+            className="flex-1 md:flex-none flex items-center justify-center gap-3 px-6 py-4 bg-[#141414] text-white border border-[#262626] rounded-2xl hover:bg-white hover:text-black transition-all font-black text-[10px] uppercase tracking-widest"
+          >
+            <ArrowRightLeft className="w-4 h-4" />
+            <span>Pindah Dana</span>
+          </button>
+          <button
+            onClick={() => {
+              setEditingId(null);
+              setNewAsset({ name: '', type: AssetType.CASH, balance: '' as any });
+              setIsAdding(true);
+            }}
+            className="flex-1 md:flex-none btn-primary"
+          >
+            <Plus className="w-5 h-5" />
+            <span>Baru</span>
+          </button>
+        </div>
       </div>
 
       <AnimatePresence>
@@ -120,9 +190,14 @@ export default function AssetList({ user }: AssetListProps) {
             exit={{ opacity: 0, scale: 0.95 }}
             className="bg-[#141414] p-6 md:p-8 rounded-3xl border border-[#262626] shadow-2xl"
           >
-            <h2 className="text-[10px] md:text-xs font-black text-white uppercase tracking-widest mb-6">
-              {editingId ? 'Edit Aset' : 'Tambah Aset Baru'}
-            </h2>
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-[10px] md:text-xs font-black text-white uppercase tracking-widest">
+                {editingId ? 'Edit Aset' : 'Tambah Aset Baru'}
+              </h2>
+              <button onClick={() => { setIsAdding(false); setEditingId(null); }} className="text-gray-500 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
             <form onSubmit={handleAddAsset} className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Nama Aset</label>
@@ -161,7 +236,64 @@ export default function AssetList({ user }: AssetListProps) {
               </div>
               <div className="flex items-end gap-3 justify-end md:justify-start">
                 <button type="submit" className="flex-1 md:flex-none btn-primary px-8">Simpan</button>
-                <button type="button" onClick={() => { setIsAdding(false); setEditingId(null); }} className="px-5 py-3 text-gray-500 hover:text-white font-bold transition-all uppercase text-[10px] tracking-widest">Batal</button>
+              </div>
+            </form>
+          </motion.div>
+        )}
+
+        {isTransferring && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.95 }}
+            className="bg-[#141414] p-6 md:p-8 rounded-3xl border border-[#262626] shadow-2xl"
+          >
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-[10px] md:text-xs font-black text-white uppercase tracking-widest">
+                Pindah Dana (Transfer)
+              </h2>
+              <button onClick={() => setIsTransferring(false)} className="text-gray-500 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            <form onSubmit={handleTransfer} className="grid grid-cols-1 md:grid-cols-4 gap-6 md:gap-8">
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Dari Aset</label>
+                <select
+                  required
+                  value={transferData.fromId}
+                  onChange={e => setTransferData({ ...transferData, fromId: e.target.value })}
+                  className="input-dark appearance-none"
+                >
+                  <option value="">Pilih Asal</option>
+                  {assets.map(a => <option key={a.id} value={a.id}>{a.name} ({formatCurrency(a.balance)})</option>)}
+                </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Ke Aset</label>
+                <select
+                  required
+                  value={transferData.toId}
+                  onChange={e => setTransferData({ ...transferData, toId: e.target.value })}
+                  className="input-dark appearance-none"
+                >
+                  <option value="">Pilih Tujuan</option>
+                  {assets.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Jumlah Pindah</label>
+                <input
+                  required
+                  type="number"
+                  value={transferData.amount}
+                  onChange={e => setTransferData({ ...transferData, amount: e.target.value })}
+                  placeholder="0"
+                  className="input-dark font-mono"
+                />
+              </div>
+              <div className="flex items-end gap-3 justify-end md:justify-start">
+                <button type="submit" className="flex-1 md:flex-none btn-primary px-8">Proses</button>
               </div>
             </form>
           </motion.div>

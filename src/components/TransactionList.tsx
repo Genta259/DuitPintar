@@ -287,6 +287,7 @@ export default function TransactionList({ user }: TransactionListProps) {
               <option value="all">Semua Tipe</option>
               <option value={TransactionType.INCOME}>Pemasukan</option>
               <option value={TransactionType.EXPENSE}>Pengeluaran</option>
+              <option value={TransactionType.TRANSFER}>Pindah Dana</option>
             </select>
           </div>
           <div className="relative">
@@ -479,9 +480,15 @@ export default function TransactionList({ user }: TransactionListProps) {
                     <td className="px-8 py-6">
                       <button 
                         onClick={() => startEdit(tx)}
-                        className={`text-sm font-black font-mono hover:underline ${tx.type === TransactionType.INCOME ? 'text-emerald-400' : 'text-rose-400'}`}
+                        className={`text-sm font-black font-mono hover:underline ${
+                          tx.type === TransactionType.INCOME 
+                            ? 'text-emerald-400' 
+                            : tx.type === TransactionType.EXPENSE 
+                              ? 'text-rose-400' 
+                              : 'text-blue-400'
+                        }`}
                       >
-                        {tx.type === TransactionType.INCOME ? '+' : '-'}{formatCurrency(tx.amount)}
+                        {tx.type === TransactionType.INCOME ? '+' : tx.type === TransactionType.EXPENSE ? '-' : ''}{formatCurrency(tx.amount)}
                       </button>
                     </td>
                     <td className="px-8 py-6 text-right">
@@ -529,8 +536,12 @@ export default function TransactionList({ user }: TransactionListProps) {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className={`text-sm font-black font-mono ${tx.type === TransactionType.INCOME ? 'text-emerald-400' : 'text-rose-400'}`}>
-                      {tx.type === TransactionType.INCOME ? '+' : '-'}{formatCurrency(tx.amount)}
+                    <p className={`text-sm font-black font-mono ${
+                      tx.type === TransactionType.INCOME ? 'text-emerald-400' : 
+                      tx.type === TransactionType.EXPENSE ? 'text-rose-400' : 
+                      'text-blue-400'
+                    }`}>
+                      {tx.type === TransactionType.INCOME ? '+' : tx.type === TransactionType.EXPENSE ? '-' : ''}{formatCurrency(tx.amount)}
                     </p>
                     <p className="text-[10px] text-gray-600 font-bold uppercase truncate max-w-[120px]">
                       {assets.find(a => a.id === tx.assetId)?.name || 'N/A'}

@@ -130,7 +130,7 @@ export default function Reports({ user }: ReportsProps) {
         new Date(tx.date).toLocaleDateString('id-ID'),
         tx.notes || tx.category || '-',
         tx.category,
-        tx.type === TransactionType.INCOME ? 'MASUK' : 'KELUAR',
+        tx.type === TransactionType.INCOME ? 'MASUK' : tx.type === TransactionType.EXPENSE ? 'KELUAR' : 'PINDAH',
         formatCurrency(tx.amount)
       ]);
 
