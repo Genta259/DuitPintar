@@ -43,6 +43,16 @@ export default function TransactionList({ user }: TransactionListProps) {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterCategory, setFilterCategory] = useState('all');
   const [filterType, setFilterType] = useState<'all' | TransactionType>('all');
+  const [selectedMonth, setSelectedMonth] = useState<number | 'all'>(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
   const [newTx, setNewTx] = useState({
     amount: '' as any,
@@ -54,7 +64,13 @@ export default function TransactionList({ user }: TransactionListProps) {
   });
 
   useEffect(() => {
-    const qTx = query(collection(db, 'transactions'), where('userId', '==', user.uid), orderBy('date', 'desc'));
+    let qTx = query(collection(db, 'transactions'), where('userId', '==', user.uid), orderBy('date', 'desc'));
+    
+    // If filtering by month/year, we need to adjust the query or filter locally.
+    // Given onSnapshot and potential large data, let's stick to the base query and filter locally for now to keep it responsive, 
+    // or we could add another where clause if we wanted to be more efficient on reads.
+    // For now, local filtering is simpler to implement with the existing onSnapshot setup.
+    
     const unsubscribeTx = onSnapshot(qTx, (snapshot) => {
       setTransactions(snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Transaction)));
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'transactions'));
@@ -223,7 +239,12 @@ export default function TransactionList({ user }: TransactionListProps) {
                           tx.category.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = filterCategory === 'all' || tx.category === filterCategory;
     const matchesType = filterType === 'all' || tx.type === filterType;
-    return matchesSearch && matchesCategory && matchesType;
+    
+    const txDate = new Date(tx.date);
+    const matchesMonth = selectedMonth === 'all' || txDate.getMonth() === selectedMonth;
+    const matchesYear = txDate.getFullYear() === selectedYear;
+
+    return matchesSearch && matchesCategory && matchesType && matchesMonth && matchesYear;
   });
 
   return (
@@ -244,18 +265,18 @@ export default function TransactionList({ user }: TransactionListProps) {
       </div>
 
       {/* Filters */}
-      <div className="flex flex-col md:flex-row gap-4 items-stretch md:items-center bg-[#141414] p-6 rounded-[30px] border border-[#262626] shadow-xl">
-        <div className="flex-1 relative">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-          <input
-            type="text"
-            placeholder="Cari transaksi..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-black/40 border border-[#262626] rounded-2xl py-3 pl-12 pr-4 text-xs font-black uppercase tracking-widest focus:border-white/20 outline-none transition-all"
-          />
-        </div>
-        <div className="grid grid-cols-2 lg:flex gap-4">
+      <div className="space-y-4">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-stretch md:items-center bg-[#141414] p-6 rounded-[30px] border border-[#262626] shadow-xl">
+          <div className="md:col-span-2 relative">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+            <input
+              type="text"
+              placeholder="Cari transaksi..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full bg-black/40 border border-[#262626] rounded-2xl py-3 pl-12 pr-4 text-xs font-black uppercase tracking-widest focus:border-white/20 outline-none transition-all"
+            />
+          </div>
           <div className="relative">
             <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
             <select
@@ -263,9 +284,9 @@ export default function TransactionList({ user }: TransactionListProps) {
               onChange={(e) => setFilterType(e.target.value as any)}
               className="w-full bg-black/40 border border-[#262626] rounded-2xl py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none appearance-none"
             >
-              <option value="all">Tipe</option>
-              <option value={TransactionType.INCOME}>Masuk</option>
-              <option value={TransactionType.EXPENSE}>Keluar</option>
+              <option value="all">Semua Tipe</option>
+              <option value={TransactionType.INCOME}>Pemasukan</option>
+              <option value={TransactionType.EXPENSE}>Pengeluaran</option>
             </select>
           </div>
           <div className="relative">
@@ -275,8 +296,32 @@ export default function TransactionList({ user }: TransactionListProps) {
               onChange={(e) => setFilterCategory(e.target.value)}
               className="w-full bg-black/40 border border-[#262626] rounded-2xl py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none appearance-none"
             >
-              <option value="all">Kategori</option>
+              <option value="all">Semua Kategori</option>
               {categories.map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+            </select>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="relative col-span-1">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+            <select
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(e.target.value === 'all' ? 'all' : Number(e.target.value))}
+              className="w-full bg-[#141414] border border-[#262626] rounded-2xl py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none appearance-none"
+            >
+              <option value="all">Semua Bulan</option>
+              {months.map((m, i) => <option key={i} value={i}>{m}</option>)}
+            </select>
+          </div>
+          <div className="relative col-span-1">
+            <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-gray-500" />
+            <select
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              className="w-full bg-[#141414] border border-[#262626] rounded-2xl py-3 pl-10 pr-8 text-[9px] font-black uppercase tracking-widest outline-none appearance-none"
+            >
+              {years.map(y => <option key={y} value={y}>{y}</option>)}
             </select>
           </div>
         </div>

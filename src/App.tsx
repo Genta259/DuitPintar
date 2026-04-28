@@ -59,10 +59,19 @@ export default function App() {
       }
     } catch (err: any) {
       console.error('Login error:', err);
-      if (err.code === 'auth/admin-restricted-operation') {
-        alert('Fitur "Anonymous Sign-in" belum diaktifkan di Firebase Console.\n\nSilakan gunakan Masuk dengan Google atau aktifkan provider "Anonymous" di tab Authentication > Sign-in method.');
+      const errorCode = err.code;
+      const errorMessage = err.message;
+
+      if (errorCode === 'auth/admin-restricted-operation') {
+        alert(`Gagal Masuk (${errorCode}): Fitur ini belum diaktifkan di Firebase Console.\n\nSaran: Silakan buka Firebase Console > Authentication > Sign-in method dan aktifkan provider yang Anda pilih (Google atau Anonymous).`);
+      } else if (errorCode === 'auth/popup-blocked') {
+        alert(`Gagal Masuk (${errorCode}): Jendela popup diblokir oleh browser.\n\nSaran: Izinkan popup untuk situs ini agar dapat masuk dengan Google.`);
+      } else if (errorCode === 'auth/operation-not-allowed') {
+        alert(`Gagal Masuk (${errorCode}): Metode masuk ini dinonaktifkan.\n\nSaran: Aktifkan metode ini di Firebase Console.`);
+      } else if (errorCode === 'auth/unauthorized-domain') {
+        alert(`Gagal Masuk (${errorCode}): Domain ini tidak diizinkan.\n\nSaran: Tambahkan "${window.location.hostname}" ke list "Authorized Domains" di Firebase Console > Authentication > Settings.`);
       } else {
-        alert('Gagal masuk: ' + (err.message || 'Terjadi kesalahan sistem.'));
+        alert(`Gagal masuk (${errorCode || 'Unknown'}): ${errorMessage || 'Terjadi kesalahan sistem.'}\n\nPastikan domain "${window.location.hostname}" sudah terdaftar di Authorized Domains pada Firebase Console.`);
       }
     }
   };

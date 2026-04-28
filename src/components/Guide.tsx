@@ -42,12 +42,6 @@ const slides = [
     description: 'Tetapkan batas pengeluaran per kategori. Kami akan memberi peringatan jika Anda hampir melampaui budget.',
     icon: <ShieldAlert className="w-16 h-16 text-emerald-400" />,
     color: 'bg-emerald-950/20'
-  },
-  {
-    title: 'Automasi Transaksi Rutin',
-    description: 'Simpan template untuk pengeluaran rutin Anda. Hemat waktu dengan memproses rincian berulang dengan satu klik.',
-    icon: <RefreshCw className="w-16 h-16 text-amber-400" />,
-    color: 'bg-amber-950/20'
   }
 ];
 

@@ -17,10 +17,14 @@ export default function Dashboard({ user }: DashboardProps) {
   const [assets, setAssets] = useState<Asset[]>([]);
   const [recentTransactions, setRecentTransactions] = useState<Transaction[]>([]);
   const [stats, setStats] = useState({
-    totalBalance: 0,
+    totalCashBank: 0,
+    totalInvestment: 0,
     monthlyIncome: 0,
     monthlyExpenses: 0,
   });
+
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
 
   useEffect(() => {
     const assetsQuery = query(collection(db, 'assets'), where('userId', '==', user.uid));
@@ -28,12 +32,18 @@ export default function Dashboard({ user }: DashboardProps) {
       const assetData = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Asset));
       setAssets(assetData);
       
-      const total = assetData.reduce((acc, curr) => acc + curr.balance, 0);
-      setStats(prev => ({ ...prev, totalBalance: total }));
+      const cashBank = assetData
+        .filter(a => a.type === 'cash' || a.type === 'bank')
+        .reduce((acc, curr) => acc + curr.balance, 0);
+      const investment = assetData
+        .filter(a => a.type === 'investment')
+        .reduce((acc, curr) => acc + curr.balance, 0);
+        
+      setStats(prev => ({ ...prev, totalCashBank: cashBank, totalInvestment: investment }));
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'assets'));
 
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+    const startOfMonth = new Date(selectedYear, selectedMonth, 1).toISOString();
+    const endOfMonth = new Date(selectedYear, selectedMonth + 1, 0, 23, 59, 59, 999).toISOString();
     
     const transactionsQuery = query(
       collection(db, 'transactions'),
@@ -47,11 +57,12 @@ export default function Dashboard({ user }: DashboardProps) {
       setRecentTransactions(transData);
     }, (error) => handleFirestoreError(error, OperationType.LIST, 'transactions'));
 
-    // Monthly stats
+    // Monthly stats with filter
     const monthlyQuery = query(
       collection(db, 'transactions'),
       where('userId', '==', user.uid),
-      where('date', '>=', startOfMonth)
+      where('date', '>=', startOfMonth),
+      where('date', '<=', endOfMonth)
     );
 
     const unsubscribeMonthly = onSnapshot(monthlyQuery, (snapshot) => {
@@ -70,7 +81,15 @@ export default function Dashboard({ user }: DashboardProps) {
       unsubscribeTransactions();
       unsubscribeMonthly();
     };
-  }, [user.uid]);
+  }, [user.uid, selectedMonth, selectedYear]);
+
+  const months = [
+    'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'
+  ];
+
+  const currentYear = new Date().getFullYear();
+  const years = Array.from({ length: 5 }, (_, i) => currentYear - 2 + i);
 
   const chartData = [
     { name: 'Pemasukan', value: stats.monthlyIncome },
@@ -84,48 +103,77 @@ export default function Dashboard({ user }: DashboardProps) {
           <h1 className="text-3xl md:text-4xl font-black text-white tracking-tight mb-2 underline decoration-white/20 underline-offset-8">
             Halo, {(user.displayName || 'Tamu').split(' ')[0]}!
           </h1>
-          <p className="text-gray-500 text-sm md:text-base font-medium">Berikut data keuangan Anda bulan ini.</p>
+          <p className="text-gray-500 text-sm md:text-base font-medium">Berikut data keuangan Anda.</p>
+        </div>
+        <div className="flex gap-2">
+          <select 
+            value={selectedMonth}
+            onChange={(e) => setSelectedMonth(Number(e.target.value))}
+            className="bg-[#141414] border border-[#262626] text-white text-[10px] font-black uppercase tracking-widest p-3 rounded-xl outline-none"
+          >
+            {months.map((m, i) => <option key={i} value={i}>{m}</option>)}
+          </select>
+          <select 
+            value={selectedYear}
+            onChange={(e) => setSelectedYear(Number(e.target.value))}
+            className="bg-[#141414] border border-[#262626] text-white text-[10px] font-black uppercase tracking-widest p-3 rounded-xl outline-none"
+          >
+            {years.map(y => <option key={y} value={y}>{y}</option>)}
+          </select>
         </div>
       </header>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 md:gap-8">
         <motion.div 
           whileHover={{ y: -5 }}
-          className="bg-[#141414] p-6 md:p-8 rounded-3xl border border-[#262626] shadow-xl"
+          className="bg-[#141414] p-6 rounded-3xl border border-[#262626] shadow-xl"
         >
-          <div className="flex items-center gap-4 mb-4 md:mb-6">
-            <div className="p-2.5 md:p-3 bg-white/5 rounded-2xl border border-white/10">
-              <Wallet className="text-white w-5 h-5 md:w-6 md:h-6" />
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-2.5 bg-white/5 rounded-2xl border border-white/10">
+              <Wallet className="text-white w-5 h-5" />
             </div>
-            <span className="text-[10px] md:text-sm font-bold text-gray-500 uppercase tracking-widest">Total Tunai & Bank</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Tunai & Bank</span>
           </div>
-          <p className="text-2xl md:text-3xl font-black text-white font-mono leading-none">{formatCurrency(stats.totalBalance)}</p>
+          <p className="text-xl md:text-2xl font-black text-white font-mono leading-none">{formatCurrency(stats.totalCashBank)}</p>
         </motion.div>
 
         <motion.div 
           whileHover={{ y: -5 }}
-          className="bg-[#141414] p-6 md:p-8 rounded-3xl border border-[#262626] shadow-xl"
+          className="bg-[#141414] p-6 rounded-3xl border border-[#262626] shadow-xl"
         >
-          <div className="flex items-center gap-4 mb-4 md:mb-6">
-            <div className="p-2.5 md:p-3 bg-white/5 rounded-2xl border border-white/10">
-              <TrendingUp className="text-white w-5 h-5 md:w-6 md:h-6" />
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-2.5 bg-white/5 rounded-2xl border border-white/10">
+              <ArrowUpRight className="text-white w-5 h-5" />
             </div>
-            <span className="text-[10px] md:text-sm font-bold text-gray-500 uppercase tracking-widest">Pemasukan</span>
+            <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Investasi</span>
           </div>
-          <p className="text-2xl md:text-3xl font-black text-white font-mono leading-none">+{formatCurrency(stats.monthlyIncome)}</p>
+          <p className="text-xl md:text-2xl font-black text-white font-mono leading-none">{formatCurrency(stats.totalInvestment)}</p>
         </motion.div>
 
         <motion.div 
           whileHover={{ y: -5 }}
-          className="bg-[#141414] p-6 md:p-8 rounded-3xl border border-[#262626] shadow-xl"
+          className="bg-[#141414] p-6 rounded-3xl border border-emerald-500/10 shadow-xl"
         >
-          <div className="flex items-center gap-4 mb-4 md:mb-6">
-            <div className="p-2.5 md:p-3 bg-white/5 rounded-2xl border border-white/10">
-              <TrendingDown className="text-white w-5 h-5 md:w-6 md:h-6" />
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-2.5 bg-emerald-500/5 rounded-2xl border border-emerald-500/10">
+              <TrendingUp className="text-emerald-400 w-5 h-5" />
             </div>
-            <span className="text-[10px] md:text-sm font-bold text-gray-500 uppercase tracking-widest">Pengeluaran</span>
+            <span className="text-[10px] font-bold text-emerald-500/50 uppercase tracking-widest">Pemasukan {months[selectedMonth]}</span>
           </div>
-          <p className="text-2xl md:text-3xl font-black text-white font-mono leading-none">-{formatCurrency(stats.monthlyExpenses)}</p>
+          <p className="text-xl md:text-2xl font-black text-white font-mono leading-none">+{formatCurrency(stats.monthlyIncome)}</p>
+        </motion.div>
+
+        <motion.div 
+          whileHover={{ y: -5 }}
+          className="bg-[#141414] p-6 rounded-3xl border border-rose-500/10 shadow-xl"
+        >
+          <div className="flex items-center gap-4 mb-4">
+            <div className="p-2.5 bg-rose-500/5 rounded-2xl border border-rose-500/10">
+              <TrendingDown className="text-rose-400 w-5 h-5" />
+            </div>
+            <span className="text-[10px] font-bold text-rose-500/50 uppercase tracking-widest">Pengeluaran {months[selectedMonth]}</span>
+          </div>
+          <p className="text-xl md:text-2xl font-black text-white font-mono leading-none">-{formatCurrency(stats.monthlyExpenses)}</p>
         </motion.div>
       </div>
 
