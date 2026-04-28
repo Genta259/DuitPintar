@@ -1,0 +1,133 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and preferences.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "currency": { "type": "string", "description": "User's preferred currency, e.g., IDR" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "email"]
+    },
+    "Asset": {
+      "title": "Asset",
+      "description": "Financial assets like cash, bank accounts, stocks.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["cash", "bank", "investment", "other"] },
+        "balance": { "type": "number" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "name", "type", "balance"]
+    },
+    "Transaction": {
+      "title": "Transaction",
+      "description": "Income and expense records.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "category": { "type": "string" },
+        "date": { "type": "string", "format": "date-time" },
+        "notes": { "type": "string" },
+        "assetId": { "type": "string", "description": "The asset this transaction affects" }
+      },
+      "required": ["userId", "amount", "type", "category", "date"]
+    },
+    "Category": {
+      "title": "Category",
+      "description": "Transaction categories.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "icon": { "type": "string" },
+        "color": { "type": "string" }
+      },
+      "required": ["userId", "name", "type"]
+    },
+    "Goal": {
+      "title": "Goal",
+      "description": "Financial goals for the future.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "targetAmount": { "type": "number" },
+        "currentAmount": { "type": "number" },
+        "targetDate": { "type": "string", "format": "date-time" },
+        "category": { "type": "string", "enum": ["marriage", "house", "education", "other"] }
+      },
+      "required": ["userId", "title", "targetAmount", "currentAmount"]
+    },
+    "Budget": {
+      "title": "Budget",
+      "description": "Monthly spending limits for categories.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "categoryId": { "type": "string" },
+        "categoryName": { "type": "string" },
+        "amount": { "type": "number" },
+        "period": { "type": "string", "enum": ["monthly"] },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "categoryId", "amount"]
+    },
+    "RecurringTransaction": {
+      "title": "RecurringTransaction",
+      "description": "Template for repeated transactions.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "amount": { "type": "number" },
+        "type": { "type": "string", "enum": ["income", "expense"] },
+        "category": { "type": "string" },
+        "notes": { "type": "string" },
+        "assetId": { "type": "string" },
+        "frequency": { "type": "string", "enum": ["monthly", "weekly"] },
+        "nextDate": { "type": "string", "format": "date-time" },
+        "lastProcessed": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "amount", "type", "category", "assetId"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile data."
+    },
+    "/assets/{assetId}": {
+      "schema": "Asset",
+      "description": "User assets."
+    },
+    "/transactions/{transactionId}": {
+      "schema": "Transaction",
+      "description": "User transactions."
+    },
+    "/categories/{categoryId}": {
+      "schema": "Category",
+      "description": "User custom categories."
+    },
+    "/goals/{goalId}": {
+      "schema": "Goal",
+      "description": "User financial goals."
+    },
+    "/budgets/{budgetId}": {
+      "schema": "Budget",
+      "description": "User monthly budgets."
+    },
+    "/recurring_transactions/{recId}": {
+      "schema": "RecurringTransaction",
+      "description": "User recurring transaction templates."
+    }
+  }
+}

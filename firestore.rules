@@ -1,0 +1,111 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // 0. Global Safety Net
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Phase 3: Primitive Definition
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isOwner(data) { 
+      return isSignedIn() && (
+        data.get('userId', '') == request.auth.uid || 
+        data.get('uid', '') == request.auth.uid
+      ); 
+    }
+
+    function incoming() { return request.resource.data; }
+    function existing() { return resource.data; }
+
+    // Validation Blueprints
+    function isValidUser(data) {
+      return isSignedIn() && data.get('uid', '') == request.auth.uid &&
+             data.get('email', '') is string &&
+             data.get('displayName', '') is string &&
+             data.get('createdAt', '') is string;
+    }
+
+    function isValidAsset(data) {
+      return isOwner(data) &&
+             data.get('name', '') is string &&
+             data.get('type', '') in ['cash', 'bank', 'investment', 'other'] &&
+             data.get('balance', 0) is number;
+    }
+
+    function isValidTransaction(data) {
+      return isOwner(data) &&
+             data.get('amount', 0) is number &&
+             data.get('type', '') in ['income', 'expense'] &&
+             data.get('category', '') is string &&
+             data.get('assetId', '') is string;
+    }
+
+    function isValidCategory(data) {
+      return isOwner(data) &&
+             data.get('name', '') is string &&
+             data.get('type', '') in ['income', 'expense'] &&
+             data.get('icon', '') is string &&
+             data.get('color', '') is string;
+    }
+
+    function isValidGoal(data) {
+      return isOwner(data) &&
+             data.get('title', '') is string &&
+             data.get('targetAmount', 0) is number &&
+             data.get('currentAmount', 0) is number &&
+             data.get('category', 'other') in ['marriage', 'house', 'education', 'other'];
+    }
+
+    function isValidBudget(data) {
+      return isOwner(data) &&
+             data.get('amount', 0) is number &&
+             data.get('period', 'monthly') == 'monthly';
+    }
+
+    // Rules for Collections
+    match /users/{userId} {
+      allow get: if isSignedIn() && (userId == request.auth.uid || isOwner(resource.data));
+      allow create: if isSignedIn() && userId == request.auth.uid && isValidUser(incoming());
+      allow update: if isOwner(resource.data);
+    }
+
+    match /assets/{assetId} {
+      allow read: if isOwner(resource.data);
+      allow create: if isValidAsset(incoming());
+      allow update: if isOwner(resource.data);
+      allow delete: if isOwner(resource.data);
+    }
+
+    match /transactions/{transactionId} {
+      allow read: if isOwner(resource.data);
+      allow create: if isValidTransaction(incoming());
+      allow update: if isOwner(resource.data);
+      allow delete: if isOwner(resource.data);
+    }
+
+    match /categories/{categoryId} {
+      allow read: if isOwner(resource.data);
+      allow create: if isValidCategory(incoming());
+      allow update: if isOwner(resource.data);
+      allow delete: if isOwner(resource.data);
+    }
+
+    match /goals/{goalId} {
+      allow read: if isOwner(resource.data);
+      allow create: if isValidGoal(incoming());
+      allow update: if isOwner(resource.data);
+      allow delete: if isOwner(resource.data);
+    }
+
+    match /budgets/{budgetId} {
+      allow read: if isOwner(resource.data);
+      allow create: if isValidBudget(incoming());
+      allow update: if isOwner(resource.data);
+      allow delete: if isOwner(resource.data);
+    }
+  }
+}
