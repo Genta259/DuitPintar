@@ -44,6 +44,7 @@ export interface Transaction {
   date: string;
   notes: string;
   assetId: string;
+  toAssetId?: string;
 }
 
 export interface Category {

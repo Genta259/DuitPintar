@@ -59,6 +59,7 @@ export default function TransactionList({ user }: TransactionListProps) {
     type: TransactionType.EXPENSE,
     category: '',
     assetId: '',
+    toAssetId: '',
     notes: '',
     date: new Date().toISOString().split('T')[0],
   });
@@ -102,6 +103,7 @@ export default function TransactionList({ user }: TransactionListProps) {
   const handleAddTransaction = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newTx.assetId || newTx.amount === '') return;
+    if (newTx.type === TransactionType.TRANSFER && !newTx.toAssetId) return;
 
     try {
       await runTransaction(db, async (tx) => {
@@ -109,53 +111,46 @@ export default function TransactionList({ user }: TransactionListProps) {
         
         if (editingTxId) {
           const oldTxRef = doc(db, 'transactions', editingTxId);
-          const newAssetRef = doc(db, 'assets', newTx.assetId);
-          
-          // READ ALL FIRST
-          const [oldTxDoc, newAssetDoc] = await Promise.all([
-            tx.get(oldTxRef),
-            tx.get(newAssetRef)
-          ]);
+          const oldTxSnapshot = await tx.get(oldTxRef);
+          if (!oldTxSnapshot.exists()) throw new Error("Transaction does not exist");
+          const oldTxData = oldTxSnapshot.data() as Transaction;
 
-          if (!oldTxDoc.exists()) throw new Error("Transaction does not exist");
-          if (!newAssetDoc.exists()) throw new Error("Target asset does not exist");
-          
-          const oldTxData = oldTxDoc.data() as Transaction;
-          const oldAssetRef = doc(db, 'assets', oldTxData.assetId);
-          
-          // If different asset, we need to read the old asset too
-          let oldAssetDoc = null;
-          if (oldTxData.assetId !== newTx.assetId) {
-            oldAssetDoc = await tx.get(oldAssetRef);
-          } else {
-            oldAssetDoc = newAssetDoc;
+          // 1. REVERT OLD TRANSACTION IMPACT
+          // Source Asset
+          const oldSourceAssetRef = doc(db, 'assets', oldTxData.assetId);
+          const oldSourceAssetSnap = await tx.get(oldSourceAssetRef);
+          if (oldSourceAssetSnap.exists()) {
+            const currentBal = oldSourceAssetSnap.data().balance;
+            const correction = oldTxData.type === TransactionType.INCOME ? -oldTxData.amount : oldTxData.amount;
+            tx.update(oldSourceAssetRef, { balance: currentBal + correction });
           }
 
-          // WRITES
-          if (oldAssetDoc.exists()) {
-            const currentOldBalance = oldAssetDoc.data().balance;
-            const correction = oldTxData.type === TransactionType.INCOME ? -oldTxData.amount : oldTxData.amount;
-            
-            // If it's the same asset, the new balance calculation will handle it
-            if (oldTxData.assetId !== newTx.assetId) {
-              tx.update(oldAssetRef, { balance: currentOldBalance + correction });
+          // Destination Asset (if it was a transfer)
+          if (oldTxData.type === TransactionType.TRANSFER && oldTxData.toAssetId) {
+            const oldDestAssetRef = doc(db, 'assets', oldTxData.toAssetId);
+            const oldDestAssetSnap = await tx.get(oldDestAssetRef);
+            if (oldDestAssetSnap.exists()) {
+              const currentBal = oldDestAssetSnap.data().balance;
+              tx.update(oldDestAssetRef, { balance: currentBal - oldTxData.amount });
             }
           }
 
-          const currentNewBalance = newAssetDoc.data().balance;
-          let finalNewBalance = currentNewBalance;
+          // 2. APPLY NEW TRANSACTION IMPACT
+          // Need to re-read assets if they changed in step 1 or are used in step 2
+          const newSourceAssetRef = doc(db, 'assets', newTx.assetId);
+          const newSourceAssetSnap = await tx.get(newSourceAssetRef);
+          if (!newSourceAssetSnap.exists()) throw new Error("Source asset not found");
+          
+          let newSourceBalance = newSourceAssetSnap.data().balance;
+          const adjustment = newTx.type === TransactionType.INCOME ? amount : -amount;
+          tx.update(newSourceAssetRef, { balance: newSourceBalance + adjustment, updatedAt: new Date().toISOString() });
 
-          if (oldTxData.assetId === newTx.assetId) {
-            // Revert then apply
-            const correction = oldTxData.type === TransactionType.INCOME ? -oldTxData.amount : oldTxData.amount;
-            const adjustment = newTx.type === TransactionType.INCOME ? amount : -amount;
-            finalNewBalance = currentNewBalance + correction + adjustment;
-          } else {
-            const adjustment = newTx.type === TransactionType.INCOME ? amount : -amount;
-            finalNewBalance = currentNewBalance + adjustment;
+          if (newTx.type === TransactionType.TRANSFER && newTx.toAssetId) {
+            const newDestAssetRef = doc(db, 'assets', newTx.toAssetId);
+            const newDestAssetSnap = await tx.get(newDestAssetRef);
+            if (!newDestAssetSnap.exists()) throw new Error("Destination asset not found");
+            tx.update(newDestAssetRef, { balance: newDestAssetSnap.data().balance + amount, updatedAt: new Date().toISOString() });
           }
-
-          tx.update(newAssetRef, { balance: finalNewBalance, updatedAt: new Date().toISOString() });
 
           tx.update(oldTxRef, {
             ...newTx,
@@ -164,6 +159,7 @@ export default function TransactionList({ user }: TransactionListProps) {
             date: new Date(newTx.date).toISOString(),
           });
         } else {
+          // NEW TRANSACTION
           const assetRef = doc(db, 'assets', newTx.assetId);
           const assetDoc = await tx.get(assetRef);
           if (!assetDoc.exists()) throw new Error("Asset does not exist");
@@ -172,6 +168,13 @@ export default function TransactionList({ user }: TransactionListProps) {
           const adjustment = newTx.type === TransactionType.INCOME ? amount : -amount;
           
           tx.update(assetRef, { balance: currentBalance + adjustment, updatedAt: new Date().toISOString() });
+
+          if (newTx.type === TransactionType.TRANSFER && newTx.toAssetId) {
+            const targetAssetRef = doc(db, 'assets', newTx.toAssetId);
+            const targetAssetDoc = await tx.get(targetAssetRef);
+            if (!targetAssetDoc.exists()) throw new Error("Target asset does not exist");
+            tx.update(targetAssetRef, { balance: targetAssetDoc.data().balance + amount, updatedAt: new Date().toISOString() });
+          }
           
           const txRef = doc(collection(db, 'transactions'));
           tx.set(txRef, {
@@ -183,7 +186,7 @@ export default function TransactionList({ user }: TransactionListProps) {
         }
       });
 
-      setNewTx({ amount: '' as any, type: TransactionType.EXPENSE, category: '', assetId: '', notes: '', date: new Date().toISOString().split('T')[0] });
+      setNewTx({ amount: '' as any, type: TransactionType.EXPENSE, category: '', assetId: '', toAssetId: '', notes: '', date: new Date().toISOString().split('T')[0] });
       setIsAdding(false);
       setEditingTxId(null);
     } catch (error) {
@@ -196,17 +199,30 @@ export default function TransactionList({ user }: TransactionListProps) {
     setIsDeleting(true);
     try {
       await runTransaction(db, async (transaction) => {
+        // Source Asset correction
         const assetRef = doc(db, 'assets', txToDelete.assetId);
         const assetSnapshot = await transaction.get(assetRef);
         
         if (assetSnapshot.exists()) {
-          const data = assetSnapshot.data();
-          const currentBalance = data ? data.balance : 0;
+          const currentBalance = assetSnapshot.data().balance;
           const correction = txToDelete.type === TransactionType.INCOME ? -txToDelete.amount : txToDelete.amount;
           transaction.update(assetRef, { 
             balance: currentBalance + correction, 
             updatedAt: new Date().toISOString() 
           });
+        }
+
+        // Target Asset correction (if transfer)
+        if (txToDelete.type === TransactionType.TRANSFER && txToDelete.toAssetId) {
+          const targetRef = doc(db, 'assets', txToDelete.toAssetId);
+          const targetSnapshot = await transaction.get(targetRef);
+          if (targetSnapshot.exists()) {
+            const currentBalance = targetSnapshot.data().balance;
+            transaction.update(targetRef, {
+              balance: currentBalance - txToDelete.amount,
+              updatedAt: new Date().toISOString()
+            });
+          }
         }
         
         const txRef = doc(db, 'transactions', txToDelete.id);
@@ -227,6 +243,7 @@ export default function TransactionList({ user }: TransactionListProps) {
       type: tx.type,
       category: tx.category,
       assetId: tx.assetId,
+      toAssetId: tx.toAssetId || '',
       notes: tx.notes || '',
       date: tx.date.split('T')[0],
     });
@@ -345,20 +362,27 @@ export default function TransactionList({ user }: TransactionListProps) {
               <div className="space-y-6">
                 <div className="flex flex-col gap-2">
                   <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Jenis Arus</label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     <button
                       type="button"
-                      onClick={() => setNewTx({ ...newTx, type: TransactionType.EXPENSE })}
+                      onClick={() => setNewTx({ ...newTx, type: TransactionType.EXPENSE, category: '' })}
                       className={`py-3 rounded-xl text-sm font-bold border transition-all ${newTx.type === TransactionType.EXPENSE ? 'bg-brand text-bg-main border-brand' : 'border-border-subtle text-text-muted hover:text-text-main'}`}
                     >
                       Keluar
                     </button>
                     <button
                       type="button"
-                      onClick={() => setNewTx({ ...newTx, type: TransactionType.INCOME })}
+                      onClick={() => setNewTx({ ...newTx, type: TransactionType.INCOME, category: '' })}
                       className={`py-3 rounded-xl text-sm font-bold border transition-all ${newTx.type === TransactionType.INCOME ? 'bg-brand text-bg-main border-brand' : 'border-border-subtle text-text-muted hover:text-text-main'}`}
                     >
                       Masuk
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setNewTx({ ...newTx, type: TransactionType.TRANSFER, category: 'Pindah Dana' })}
+                      className={`py-3 rounded-xl text-sm font-bold border transition-all ${newTx.type === TransactionType.TRANSFER ? 'bg-brand text-bg-main border-brand' : 'border-border-subtle text-text-muted hover:text-text-main'}`}
+                    >
+                      Pindah
                     </button>
                   </div>
                 </div>
@@ -377,37 +401,54 @@ export default function TransactionList({ user }: TransactionListProps) {
 
               <div className="space-y-6">
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Sumber Dana (Aset)</label>
+                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">
+                    {newTx.type === TransactionType.TRANSFER ? 'Dari Aset' : 'Sumber Dana (Aset)'}
+                  </label>
                   <select
                     required
                     value={newTx.assetId}
                     onChange={e => setNewTx({ ...newTx, assetId: e.target.value })}
                     className="input-dark appearance-none"
                   >
-                    <option value="">Pilih Aset Mana</option>
+                    <option value="">Pilih Aset</option>
                     {assets.map(a => <option key={a.id} value={a.id}>{a.name} ({formatCurrency(a.balance)})</option>)}
                   </select>
                 </div>
-                <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Pilih Kategori</label>
-                  <select
-                    required
-                    value={newTx.category}
-                    onChange={e => setNewTx({ ...newTx, category: e.target.value })}
-                    className="input-dark appearance-none"
-                  >
-                    <option value="">Pilih Kategori</option>
-                    {categories.filter(c => c.type === newTx.type).map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
-                    {!categories.some(c => c.type === newTx.type) && (
-                      <>
-                        <option value="Makan">Makan</option>
-                        <option value="Belanja">Belanja</option>
-                        <option value="Transport">Transport</option>
-                        <option value="Gaji">Gaji (Pendapatan)</option>
-                      </>
-                    )}
-                  </select>
-                </div>
+                {newTx.type === TransactionType.TRANSFER ? (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Ke Aset Tujuan</label>
+                    <select
+                      required
+                      value={newTx.toAssetId}
+                      onChange={e => setNewTx({ ...newTx, toAssetId: e.target.value })}
+                      className="input-dark appearance-none"
+                    >
+                      <option value="">Pilih Tujuan</option>
+                      {assets.filter(a => a.id !== newTx.assetId).map(a => <option key={a.id} value={a.id}>{a.name} ({formatCurrency(a.balance)})</option>)}
+                    </select>
+                  </div>
+                ) : (
+                  <div className="flex flex-col gap-2">
+                    <label className="text-[10px] font-black text-text-muted uppercase tracking-widest">Pilih Kategori</label>
+                    <select
+                      required
+                      value={newTx.category}
+                      onChange={e => setNewTx({ ...newTx, category: e.target.value })}
+                      className="input-dark appearance-none"
+                    >
+                      <option value="">Pilih Kategori</option>
+                      {categories.filter(c => c.type === newTx.type).map(c => <option key={c.id} value={c.name}>{c.name}</option>)}
+                      {!categories.some(c => c.type === newTx.type) && (
+                        <>
+                          <option value="Makan">Makan</option>
+                          <option value="Belanja">Belanja</option>
+                          <option value="Transport">Transport</option>
+                          <option value="Gaji">Gaji (Pendapatan)</option>
+                        </>
+                      )}
+                    </select>
+                  </div>
+                )}
               </div>
 
               <div className="space-y-6">

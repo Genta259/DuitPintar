@@ -113,7 +113,8 @@ export default function AssetList({ user }: AssetListProps) {
         category: 'Pindah Dana',
         date: new Date().toISOString(),
         notes: `Pindah dari ${sourceAsset.name} ke ${destAsset.name}`,
-        assetId: fromId, // Primary asset for this record is source
+        assetId: fromId,
+        toAssetId: toId, // Add this
       });
 
       await batch.commit();
